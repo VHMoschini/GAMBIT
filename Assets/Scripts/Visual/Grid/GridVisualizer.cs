@@ -1,3 +1,4 @@
+using Game.Core.Common;
 using Game.Core.Grid;
 using UnityEngine;
 
@@ -60,12 +61,11 @@ namespace Game.Visual.Grid
 
             foreach (var baked in data.Tiles)
             {
+                var baseName = $"Tile_{baked.Coord.X}_{baked.Coord.Z}";
                 var tile = tilePrefab != null
-                    ? Instantiate(tilePrefab, transform)
-                    : GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    ? SceneObjectFactory.Instantiate(tilePrefab, baseName, transform, this)
+                    : SceneObjectFactory.CreatePrimitive(PrimitiveType.Cube, baseName, transform, this);
 
-                tile.transform.SetParent(transform, worldPositionStays: false);
-                tile.name = $"Tile_{baked.Coord.X}_{baked.Coord.Z}";
                 tile.transform.localPosition = new Vector3(
                     baked.Coord.X * data.CellSize,
                     baked.HeightLevel * data.HeightStep,

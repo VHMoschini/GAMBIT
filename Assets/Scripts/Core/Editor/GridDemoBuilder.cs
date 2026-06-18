@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Game.Core.Common;
 using Game.Core.Grid;
 using UnityEditor;
 using UnityEngine;
@@ -33,7 +34,7 @@ namespace Game.Core.Editor
             var grass = GetOrCreateTileType("Grass", new Color(0.45f, 0.7f, 0.35f), blocks: false);
             var rock = GetOrCreateTileType("Rock", new Color(0.5f, 0.5f, 0.55f), blocks: true);
 
-            var root = new GameObject("DemoGrid");
+            var root = SceneObjectFactory.Create("DemoGrid", parent: null, owner: typeof(GridDemoBuilder));
             Undo.RegisterCreatedObjectUndo(root, "Create Demo Grid");
 
             for (var x = 0; x < Size; x++)
@@ -47,9 +48,8 @@ namespace Game.Core.Editor
                 var type = isRock ? rock : grass;
                 var level = isRock ? 1 : 0;
 
-                var tile = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                tile.name = $"Tile_{x}_{z}";
-                tile.transform.SetParent(root.transform);
+                var tile = SceneObjectFactory.CreatePrimitive(
+                    PrimitiveType.Cube, $"Tile_{x}_{z}", root.transform, owner: typeof(GridDemoBuilder));
                 tile.transform.position = new Vector3(x * CellSize, level * HeightStep, z * CellSize);
                 tile.transform.localScale = new Vector3(CellSize * 0.95f, HeightStep, CellSize * 0.95f);
 

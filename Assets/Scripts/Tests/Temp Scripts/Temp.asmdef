@@ -1,11 +1,10 @@
 {
-    "name": "Game.Visual",
-    "rootNamespace": "Game.Visual",
+    "name": "Temp",
+    "rootNamespace": "",
     "references": [
-        "Game.Core",
-        "GenericEventBus",
-        "Unity.Cinemachine",
-        "Unity.Cinemachine.Editor"
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:473a0ffb22506f0478e723b008a89f92",
+        "GUID:bed43355408635141a3157f33b7ea1b5"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

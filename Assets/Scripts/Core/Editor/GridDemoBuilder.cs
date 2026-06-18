@@ -18,7 +18,7 @@ namespace Game.Core.Editor
         private const float HeightStep = 0.5f;
         private const int Size = 7;
 
-        // Buraco no meio do tabuleiro — o BFS de movimento precisa contorná-lo.
+        // Buraco no meio do tabuleiro — tabuleiro irregular (peças têm de contorná-lo).
         private static readonly HashSet<GridCoord> Holes = new HashSet<GridCoord>
         {
             new GridCoord(3, 3),

@@ -5,12 +5,12 @@ namespace Game.Core.Grid
 {
     /// <summary>
     /// Grid lógico esparso (POCO, testável em edit mode). Mapeia <see cref="GridCoord"/> → <see cref="Tile"/>
-    /// num dicionário: <b>buraco = ausência de chave</b>, e o flood-fill contorna buracos sozinho.
+    /// num dicionário: <b>buraco = ausência de chave</b>.
     ///
-    /// O grid só responde topologia ("quais são meus vizinhos", "o que alcanço"). A <i>política</i> de
-    /// movimento (ocupação, diferença de níveis, terreno proibido) vem de fora, no delegate
-    /// <c>canStep</c> de <see cref="GetReachable"/>. Um MonoBehaviour fino (<c>GridRuntime</c>) carrega os
-    /// dados baked e expõe esta instância.
+    /// O grid só responde topologia ("essa célula existe?", "quais são meus vizinhos?") e ocupação. A
+    /// <i>política</i> de movimento (padrões fixos por peça, deslizar com caminho livre) vive fora do grid,
+    /// na validação do comando de movimento (ver arquitetura seção 6). Um MonoBehaviour fino
+    /// (<c>GridRuntime</c>) carrega os dados baked e expõe esta instância.
     /// </summary>
     public sealed class GridSystem
     {
@@ -71,53 +71,6 @@ namespace Game.Core.Grid
                 var n = coord + offset;
                 if (_tiles.ContainsKey(n)) yield return n;
             }
-        }
-
-        /// <summary>
-        /// BFS puro a partir de <paramref name="origin"/> com custo de passo = 1 (altura não afeta custo,
-        /// mas pode bloquear via <paramref name="canStep"/>). Retorna o mapa coord → nº de passos para
-        /// cada célula alcançável (inclui a origem com 0). Contorna buracos por construção (vizinho
-        /// inexistente nunca entra na fila).
-        /// </summary>
-        /// <param name="origin">Célula de partida (deve existir).</param>
-        /// <param name="maxSteps">Alcance máximo em passos.</param>
-        /// <param name="canStep">
-        /// Política de transição: <c>canStep(de, para)</c> decide se o passo entre dois tiles vizinhos é
-        /// permitido (ocupação, diferença de níveis, terreno). <c>null</c> = só topologia (tudo liberado).
-        /// </param>
-        /// <param name="diagonal">Se o movimento considera as 8 direções.</param>
-        public IReadOnlyDictionary<GridCoord, int> GetReachable(
-            GridCoord origin,
-            int maxSteps,
-            Func<Tile, Tile, bool> canStep = null,
-            bool diagonal = false)
-        {
-            var dist = new Dictionary<GridCoord, int>();
-            if (maxSteps < 0 || !_tiles.ContainsKey(origin))
-                return dist;
-
-            dist[origin] = 0;
-            var queue = new Queue<GridCoord>();
-            queue.Enqueue(origin);
-
-            while (queue.Count > 0)
-            {
-                var current = queue.Dequeue();
-                var currentDist = dist[current];
-                if (currentDist == maxSteps) continue;
-
-                var currentTile = _tiles[current];
-                foreach (var next in GetNeighbors(current, diagonal))
-                {
-                    if (dist.ContainsKey(next)) continue;
-                    if (canStep != null && !canStep(currentTile, _tiles[next])) continue;
-
-                    dist[next] = currentDist + 1;
-                    queue.Enqueue(next);
-                }
-            }
-
-            return dist;
         }
     }
 }

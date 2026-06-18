@@ -5,8 +5,8 @@ namespace Game.Core.Grid
     /// (highlight é evento, ver arquitetura seção 4). Estado derivado nunca é armazenado em paralelo.
     ///
     /// <para><b>Occupant chega no Marco 2 (Piece System).</b> Até lá, ocupação não existe no core;
-    /// o BFS de alcance trata a política de bloqueio via o delegate <c>canStep</c> que o chamador
-    /// fornece — "Grid fornece topologia; peça/regra fornece a política".</para>
+    /// a política de movimento (padrões fixos por peça, deslizar com caminho livre) vive fora do core,
+    /// na validação do comando — "Grid fornece topologia; peça/regra fornece a política".</para>
     /// </summary>
     public sealed class Tile
     {

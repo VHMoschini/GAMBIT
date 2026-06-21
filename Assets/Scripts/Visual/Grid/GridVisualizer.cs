@@ -10,8 +10,8 @@ namespace Game.Visual.Grid
     /// Demonstra o princípio "core fala, visual ouve" — o visual <b>lê</b> o dado do core e desenha;
     /// o core nunca sabe que existe render.
     ///
-    /// É uma alternativa de runtime aos cubos de autoria do <c>GridDemoBuilder</c>: aponte para o mesmo
-    /// <see cref="GridData"/> (ou ao <see cref="GridRuntime"/>) e o tabuleiro aparece ao dar Play.
+    /// É uma alternativa de runtime aos cubos de autoria do <c>GridDemoBuilder</c>: aponte para o
+    /// <see cref="GridData"/> baked e o tabuleiro aparece ao dar Play.
     ///
     /// <para><b>Referência de autoria (editor):</b> com <c>drawGizmos</c> ligado, desenha a grid como
     /// gizmos no Scene view <b>fora do Play</b> — sem instanciar objetos — para o artista compor o
@@ -20,10 +20,8 @@ namespace Game.Visual.Grid
     /// </summary>
     public sealed class GridVisualizer : MonoBehaviour
     {
-        [Tooltip("Dado baked a renderizar. Se vazio, tenta usar o GridData do GridRuntime no mesmo objeto.")]
+        [Tooltip("Dado baked a renderizar (asset produzido pelo GridBaker, menu GAMBIT/Grid).")]
         [SerializeField] private GridData gridData;
-
-        [SerializeField] private GridRuntime gridRuntime;
 
         [Tooltip("Prefab opcional do tile. Se vazio, usa um cubo primitivo.")]
         [SerializeField] private GameObject tilePrefab;
@@ -44,14 +42,9 @@ namespace Game.Visual.Grid
 
         private void Start() => Build();
 
-        /// <summary>Resolve o dado a usar: o GridData atribuído ou, na falta, o do GridRuntime.</summary>
-        private GridData ResolveData() =>
-            gridData != null ? gridData : (gridRuntime != null ? gridRuntime.Data : null);
-
         public void Build()
         {
-            var data = ResolveData();
-            if (data == null)
+            if (gridData == null)
             {
                 Debug.LogError($"{nameof(GridVisualizer)}: nenhum {nameof(GridData)} para renderizar.", this);
                 return;
@@ -59,7 +52,7 @@ namespace Game.Visual.Grid
 
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
 
-            foreach (var baked in data.Tiles)
+            foreach (var baked in gridData.Tiles)
             {
                 var baseName = $"Tile_{baked.Coord.X}_{baked.Coord.Z}";
                 var tile = tilePrefab != null
@@ -67,10 +60,10 @@ namespace Game.Visual.Grid
                     : SceneObjectFactory.CreatePrimitive(PrimitiveType.Cube, baseName, transform, this);
 
                 tile.transform.localPosition = new Vector3(
-                    baked.Coord.X * data.CellSize,
-                    baked.HeightLevel * data.HeightStep,
-                    baked.Coord.Z * data.CellSize);
-                tile.transform.localScale = new Vector3(data.CellSize * 0.95f, data.HeightStep, data.CellSize * 0.95f);
+                    baked.Coord.X * gridData.CellSize,
+                    baked.HeightLevel * gridData.HeightStep,
+                    baked.Coord.Z * gridData.CellSize);
+                tile.transform.localScale = new Vector3(gridData.CellSize * 0.95f, gridData.HeightStep, gridData.CellSize * 0.95f);
 
                 if (tilePrefab == null && baked.Type != null)
                 {
@@ -83,20 +76,18 @@ namespace Game.Visual.Grid
 
         private void OnDrawGizmos()
         {
-            if (!drawGizmos) return;
-            var data = ResolveData();
-            if (data == null) return;
+            if (!drawGizmos || gridData == null) return;
 
             var matrixBackup = Gizmos.matrix;
             Gizmos.matrix = transform.localToWorldMatrix; // respeita posição/rotação/escala do objeto
 
-            foreach (var baked in data.Tiles)
+            foreach (var baked in gridData.Tiles)
             {
                 var center = new Vector3(
-                    baked.Coord.X * data.CellSize,
-                    baked.HeightLevel * data.HeightStep,
-                    baked.Coord.Z * data.CellSize);
-                var size = new Vector3(data.CellSize * 0.95f, data.HeightStep, data.CellSize * 0.95f);
+                    baked.Coord.X * gridData.CellSize,
+                    baked.HeightLevel * gridData.HeightStep,
+                    baked.Coord.Z * gridData.CellSize);
+                var size = new Vector3(gridData.CellSize * 0.95f, gridData.HeightStep, gridData.CellSize * 0.95f);
                 var color = baked.Type != null ? baked.Type.DebugColor : Color.gray;
 
                 if (drawFilledGizmos)
@@ -113,12 +104,12 @@ namespace Game.Visual.Grid
 
 #if UNITY_EDITOR
             if (!drawCoordLabels) return;
-            foreach (var baked in data.Tiles)
+            foreach (var baked in gridData.Tiles)
             {
                 var local = new Vector3(
-                    baked.Coord.X * data.CellSize,
-                    baked.HeightLevel * data.HeightStep + data.HeightStep * 0.5f,
-                    baked.Coord.Z * data.CellSize);
+                    baked.Coord.X * gridData.CellSize,
+                    baked.HeightLevel * gridData.HeightStep + gridData.HeightStep * 0.5f,
+                    baked.Coord.Z * gridData.CellSize);
                 UnityEditor.Handles.Label(transform.TransformPoint(local), $"{baked.Coord.X},{baked.Coord.Z}");
             }
 #endif

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Game.Core.Pieces;
 
 namespace Game.Core.Grid
 {
@@ -71,6 +72,26 @@ namespace Game.Core.Grid
                 var n = coord + offset;
                 if (_tiles.ContainsKey(n)) yield return n;
             }
+        }
+
+        // ---- Ocupação ----------------------------------------------------------
+        // O Grid é dono do que está posicionado. A mutação passa por aqui (resolução do MoveCommand);
+        // a política de movimento (deslizar/caminho livre) vive na validação do comando, não no Grid.
+
+        /// <summary>Posiciona <paramref name="piece"/> na célula. Lança se a célula não existe (buraco).</summary>
+        public void SetOccupant(GridCoord coord, Piece piece)
+        {
+            var tile = GetTile(coord);
+            if (tile == null) throw new InvalidOperationException($"Não há célula em {coord} para ocupar.");
+            tile.SetOccupant(piece);
+        }
+
+        /// <summary>Libera a ocupação da célula. Lança se a célula não existe (buraco).</summary>
+        public void ClearOccupant(GridCoord coord)
+        {
+            var tile = GetTile(coord);
+            if (tile == null) throw new InvalidOperationException($"Não há célula em {coord} para liberar.");
+            tile.SetOccupant(null);
         }
     }
 }

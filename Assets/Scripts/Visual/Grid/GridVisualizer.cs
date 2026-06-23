@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Game.Core.Common;
 using Game.Core.Grid;
 using UnityEngine;
@@ -40,9 +41,23 @@ namespace Game.Visual.Grid
         [Tooltip("Opacidade do preenchimento dos gizmos.")]
         [SerializeField] private float gizmoFillAlpha = 0.25f;
 
-        private void Start() => Build();
+        private readonly Dictionary<GridCoord, GameObject> _tileObjects = new Dictionary<GridCoord, GameObject>();
+        private readonly Dictionary<GameObject, GridCoord> _coordByObject = new Dictionary<GameObject, GridCoord>();
+        private bool _built;
 
-        public void Build()
+        /// <summary>Tile renderizado por coordenada (disponível após o build). Leitura do controller/highlighter.</summary>
+        public IReadOnlyDictionary<GridCoord, GameObject> TileObjects => _tileObjects;
+
+        private void Start() => EnsureBuilt();
+
+        /// <summary>Constrói o tabuleiro uma única vez (idempotente). Chamado por quem precisar dos tiles no Start.</summary>
+        public void EnsureBuilt()
+        {
+            if (_built) return;
+            Build();
+        }
+
+        private void Build()
         {
             if (gridData == null)
             {
@@ -71,7 +86,27 @@ namespace Game.Visual.Grid
                     if (renderer != null)
                         renderer.sharedMaterial = new Material(shader) { color = baked.Type.DebugColor };
                 }
+
+                _tileObjects[baked.Coord] = tile;
+                _coordByObject[tile] = baked.Coord;
             }
+
+            _built = true;
+        }
+
+        /// <summary>Coordenada do tile renderizado de um GameObject (ex: alvo de um raycast). Falha se não for um tile.</summary>
+        public bool TryGetCoord(GameObject tileObject, out GridCoord coord)
+            => _coordByObject.TryGetValue(tileObject, out coord);
+
+        /// <summary>Posição de mundo logo acima da célula — para apoiar/animar uma peça sobre o tile.</summary>
+        public Vector3 TopOf(GridCoord coord)
+        {
+            if (_tileObjects.TryGetValue(coord, out var tile))
+                return tile.transform.position + Vector3.up * (gridData.HeightStep * 0.5f + 0.3f);
+
+            // Fallback (coordenada sem tile renderizado): calcula pela footprint lógica.
+            var local = new Vector3(coord.X * gridData.CellSize, 0f, coord.Z * gridData.CellSize);
+            return transform.TransformPoint(local) + Vector3.up * 0.3f;
         }
 
         private void OnDrawGizmos()

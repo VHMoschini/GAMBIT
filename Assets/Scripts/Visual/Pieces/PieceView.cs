@@ -9,9 +9,9 @@ using UnityEngine;
 namespace Game.Visual.Pieces
 {
     /// <summary>
-    /// Representação visual de uma peça. Anima o deslocamento ao receber <see cref="PieceMovedEvent"/>,
-    /// usando o <b>fato completo</b> do payload (<c>from</c>/<c>to</c>) — nunca lê o estado atual do core
-    /// (que já avançou quando o evento chega). Roda atrasado em relação ao core, sem acoplamento.
+    /// Representação visual de uma peça. Reage aos <b>fatos completos</b> do bus — anima o deslocamento
+    /// (<see cref="PieceMovedEvent"/>) e some ao morrer (<see cref="PieceDiedEvent"/>) — sempre a partir do
+    /// payload, nunca do estado atual do core (que já avançou quando o evento chega). Roda atrasado, sem acoplamento.
     /// </summary>
     public sealed class PieceView : MonoBehaviour
     {
@@ -21,6 +21,7 @@ namespace Game.Visual.Pieces
         private GameEventBus _bus;
         private Func<GridCoord, Vector3> _worldOf;
         private GenericEventBus<IGameEvent>.EventHandler<PieceMovedEvent> _onMoved;
+        private GenericEventBus<IGameEvent>.EventHandler<PieceDiedEvent> _onDied;
         private Coroutine _animation;
 
         /// <summary>Liga a view a um id de peça e ao bus; <paramref name="worldOf"/> mapeia coordenada → posição de mundo.</summary>
@@ -30,7 +31,9 @@ namespace Game.Visual.Pieces
             _bus = bus;
             _worldOf = worldOf;
             _onMoved = OnMoved;
+            _onDied = OnDied;
             _bus.SubscribeTo(_onMoved);
+            _bus.SubscribeTo(_onDied);
         }
 
         private void OnMoved(ref PieceMovedEvent e)
@@ -41,6 +44,12 @@ namespace Game.Visual.Pieces
             var to = _worldOf(e.To);
             if (_animation != null) StopCoroutine(_animation);
             _animation = StartCoroutine(Animate(from, to));
+        }
+
+        private void OnDied(ref PieceDiedEvent e)
+        {
+            if (!e.Piece.Equals(_id)) return;
+            Destroy(gameObject); // OnDestroy cancela as inscrições no bus.
         }
 
         private IEnumerator Animate(Vector3 from, Vector3 to)
@@ -59,7 +68,9 @@ namespace Game.Visual.Pieces
 
         private void OnDestroy()
         {
-            if (_bus != null && _onMoved != null) _bus.UnsubscribeFrom(_onMoved);
+            if (_bus == null) return;
+            if (_onMoved != null) _bus.UnsubscribeFrom(_onMoved);
+            if (_onDied != null) _bus.UnsubscribeFrom(_onDied);
         }
     }
 }

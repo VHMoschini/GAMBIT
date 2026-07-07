@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: Runner
   m_EditorClassIdentifier: Game.Core::Game.Core.Pieces.PieceDefinition
   displayName: Runner
+  attack: 3
+  defense: 0
+  maxHP: 5
   movePatterns:
   - label: 1 frente
     steps:
@@ -42,3 +45,4 @@ MonoBehaviour:
       z: -1
   actions:
   - {fileID: 11400000, guid: e4dd93634676e064da62813e91c26a6e, type: 2}
+  - {fileID: 11400000, guid: 6bf1c5c5cd664d8ea21f9bf5c15e5671, type: 2}

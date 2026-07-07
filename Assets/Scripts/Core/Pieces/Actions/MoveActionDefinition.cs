@@ -11,7 +11,7 @@ namespace Game.Core.Pieces.Actions
     [CreateAssetMenu(fileName = "MoveAction", menuName = "GAMBIT/Actions/Move", order = 0)]
     public sealed class MoveActionDefinition : ActionDefinition
     {
-        public override ICommand BuildCommand(Piece source, GridCoord target)
+        public override ICommand BuildCommand(Piece source, GridCoord target, GameContext context)
             => new MoveCommand(source.Owner, source.Id, source.Position, target);
 
         /// <summary>Cria a ação em runtime (tooling/testes). Em produção, autorada como asset.</summary>

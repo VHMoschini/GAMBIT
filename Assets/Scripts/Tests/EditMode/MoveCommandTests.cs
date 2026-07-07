@@ -26,7 +26,7 @@ namespace Game.Core.Tests
         {
             var grid = FullGrid(3, 3);
             var bus = new GameEventBus();
-            return (grid, new GameContext(grid, bus), bus);
+            return (grid, new GameContext(grid, bus, new PieceRegistry()), bus);
         }
 
         [Test]

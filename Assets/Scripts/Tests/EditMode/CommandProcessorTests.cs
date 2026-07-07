@@ -26,7 +26,7 @@ namespace Game.Core.Tests
         {
             var grid = FullGrid(3, 3);
             var bus = new GameEventBus();
-            var processor = new CommandProcessor(new GameContext(grid, bus));
+            var processor = new CommandProcessor(new GameContext(grid, bus, new PieceRegistry()));
             grid.SetOccupant(new GridCoord(1, 0),
                 new Piece(PawnDef(), new PieceId(1), PlayerId.Player1, new GridCoord(1, 0)));
 
@@ -47,7 +47,7 @@ namespace Game.Core.Tests
         {
             var grid = FullGrid(3, 3);
             var bus = new GameEventBus();
-            var processor = new CommandProcessor(new GameContext(grid, bus));
+            var processor = new CommandProcessor(new GameContext(grid, bus, new PieceRegistry()));
             grid.SetOccupant(new GridCoord(1, 0),
                 new Piece(PawnDef(), new PieceId(1), PlayerId.Player1, new GridCoord(1, 0)));
 

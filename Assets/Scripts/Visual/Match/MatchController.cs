@@ -14,12 +14,13 @@ using UnityEngine.InputSystem;
 namespace Game.Visual.Match
 {
     /// <summary>
-    /// Bootstrap mínimo do vertical slice do Marco 2: monta o pipeline (bus + processor + contexto),
-    /// posiciona uma peça e traduz cliques em seleção/movimento. Demonstra a stack inteira de ponta a
-    /// ponta — input → comando → core → evento → visual.
+    /// Bootstrap do vertical slice: monta o pipeline (bus + registro + processor + contexto), posiciona
+    /// duas peças (uma por lado) e traduz cliques em movimento/ataque. Demonstra a stack inteira de ponta
+    /// a ponta — input → comando → core → evento → visual — incluindo a cadeia derivada ataque → dano → morte.
     ///
-    /// <para>É o ancestral mínimo do <c>HumanController</c> (Marco 4): ainda sem wizard de seleção em
-    /// pilha, turno, stamina ou gate de input durante a animação. Esses entram nos marcos seguintes.</para>
+    /// <para>Ainda é o ancestral mínimo do <c>HumanController</c> (Marco 4): sem wizard de seleção em pilha,
+    /// turno, stamina ou gate de input durante a animação. Aqui o "controlador" só existe para o Player1;
+    /// o Player2 é um alvo estático até o Marco 4 trazer dois controllers alternando.</para>
     /// </summary>
     public sealed class MatchController : MonoBehaviour
     {
@@ -29,19 +30,27 @@ namespace Game.Visual.Match
         [SerializeField] private TileHighlighter highlighter;
         [SerializeField] private Camera clickCamera;
 
-        [Header("Peça inicial")]
+        [Header("Peça do jogador (Player1)")]
         [SerializeField] private PieceDefinition pieceDefinition;
         [SerializeField] private GridCoord spawnCoord = new GridCoord(0, 0);
-        [SerializeField] private PlayerId owner = PlayerId.Player1;
+
+        [Header("Peça inimiga (Player2)")]
+        [SerializeField] private PieceDefinition enemyDefinition;
+        [SerializeField] private GridCoord enemySpawnCoord = new GridCoord(0, 2);
+
+        private const PlayerId Owner = PlayerId.Player1;
 
         private GameEventBus _bus;
         private CommandProcessor _processor;
+        private GameContext _context;
         private GridSystem _grid;
         private MoveActionDefinition _moveAction;
+        private AttackActionDefinition _attackAction;
 
         private Piece _selected;
         private IReadOnlyList<GridCoord> _selectedDestinations;
-        private int _nextPieceId;
+        private IReadOnlyList<GridCoord> _attackTargets;
+        private int _nextPieceId = 1; // 0 fica reservado como "sem alvo" (ver AttackActionDefinition).
 
         private void Start()
         {
@@ -52,17 +61,20 @@ namespace Game.Visual.Match
             _grid = gridRuntime.Grid;
 
             _bus = new GameEventBus();
-            _processor = new CommandProcessor(new GameContext(_grid, _bus));
+            _context = new GameContext(_grid, _bus, new PieceRegistry());
+            _processor = new CommandProcessor(_context);
             if (highlighter != null) highlighter.Bind(_bus);
 
             _moveAction = pieceDefinition.Actions.OfType<MoveActionDefinition>().FirstOrDefault();
+            _attackAction = pieceDefinition.Actions.OfType<AttackActionDefinition>().FirstOrDefault();
             if (_moveAction == null)
             {
                 Debug.LogError($"{nameof(MatchController)}: a PieceDefinition '{pieceDefinition?.DisplayName}' não tem MoveActionDefinition.", this);
                 return;
             }
 
-            SpawnPiece(pieceDefinition, owner, spawnCoord);
+            SpawnPiece(pieceDefinition, Owner, spawnCoord);
+            if (enemyDefinition != null) SpawnPiece(enemyDefinition, PlayerId.Player2, enemySpawnCoord);
         }
 
         private void SpawnPiece(PieceDefinition definition, PlayerId pieceOwner, GridCoord at)
@@ -70,11 +82,16 @@ namespace Game.Visual.Match
             var id = new PieceId(_nextPieceId++);
             var piece = new Piece(definition, id, pieceOwner, at);
             _grid.SetOccupant(at, piece);
+            _processor.Register(piece);
 
             var go = SceneObjectFactory.CreatePrimitive(
                 PrimitiveType.Capsule, $"Piece_{definition.DisplayName}_{id.Value}", visualizer.transform, this);
             go.transform.position = visualizer.TopOf(at);
             go.transform.localScale = new Vector3(0.6f, 0.6f, 0.6f);
+
+            // Sem collider na peça: o raycast de clique resolve sempre o tile embaixo (seleção/alvo por casa).
+            var collider = go.GetComponent<Collider>();
+            if (collider != null) Destroy(collider);
 
             go.AddComponent<PieceView>().Bind(id, _bus, visualizer.TopOf);
         }
@@ -103,9 +120,11 @@ namespace Game.Visual.Match
                 return;
             }
 
-            // Com uma peça selecionada: clicar num destino jogável move; qualquer outro clique cancela.
+            // Com uma peça selecionada: destino jogável move; inimigo no alcance ataca; o resto cancela.
             if (_selectedDestinations != null && _selectedDestinations.Contains(coord))
-                _processor.Submit(_moveAction.BuildCommand(_selected, coord));
+                _processor.Submit(_moveAction.BuildCommand(_selected, coord, _context));
+            else if (_attackTargets != null && _attackTargets.Contains(coord))
+                _processor.Submit(_attackAction.BuildCommand(_selected, coord, _context));
 
             ClearSelection();
         }
@@ -113,11 +132,29 @@ namespace Game.Visual.Match
         private void TrySelect(GridCoord coord)
         {
             var piece = _grid.GetTile(coord)?.Occupant;
-            if (piece == null || piece.Owner != owner) return;
+            if (piece == null || piece.Owner != Owner) return;
 
             _selected = piece;
             _selectedDestinations = MoveResolver.GetPlayableDestinations(piece, _grid);
-            _bus.Raise(new ReachableTilesComputedEvent(owner, _selectedDestinations));
+            _attackTargets = ComputeAttackTargets(piece);
+            _bus.Raise(new ReachableTilesComputedEvent(Owner, _selectedDestinations));
+        }
+
+        /// <summary>Casas de inimigos vivos dentro do alcance (Chebyshev) da ação de ataque da peça.</summary>
+        private IReadOnlyList<GridCoord> ComputeAttackTargets(Piece attacker)
+        {
+            var targets = new List<GridCoord>();
+            if (_attackAction == null) return targets;
+
+            foreach (var tile in _grid.AllTiles)
+            {
+                var occupant = tile.Occupant;
+                if (occupant == null || occupant.Owner == attacker.Owner) continue;
+                if (attacker.Position.ChebyshevDistanceTo(tile.Coord) <= _attackAction.Range)
+                    targets.Add(tile.Coord);
+            }
+
+            return targets;
         }
 
         private void ClearSelection()
@@ -125,7 +162,8 @@ namespace Game.Visual.Match
             if (_selected == null) return;
             _selected = null;
             _selectedDestinations = null;
-            _bus.Raise(new ReachableTilesClearedEvent(owner));
+            _attackTargets = null;
+            _bus.Raise(new ReachableTilesClearedEvent(Owner));
         }
 
         private void OnDestroy() => _bus?.Dispose();

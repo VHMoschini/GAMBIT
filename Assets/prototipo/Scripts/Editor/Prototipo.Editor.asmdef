@@ -1,0 +1,19 @@
+{
+    "name": "Prototipo.Editor",
+    "rootNamespace": "Prototipo.Editor",
+    "references": [
+        "Prototipo.Core",
+        "Prototipo.Visual"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

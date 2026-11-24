@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91a45c8a21f350a4f95e3a068ce80f1a, type: 3}
+  m_Name: Peca_Azul
+  m_EditorClassIdentifier: Prototipo.Core::Prototipo.Core.PieceBlueprint
+  id: blue
+  displayName: Lanceiro Azul
+  roleSummary: "Flanqueador \xE1gil (at\xE9 2 casas ortogonais + diagonais frontais)"
+  pieceColor: {r: 0.2, g: 0.5, b: 0.95, a: 1}
+  cylinderScale: {x: 0.52, y: 0.8, z: 0.52}
+  maxHP: 8
+  attack: 4
+  defense: 1
+  unlockCost: 2
+  moveCost: 1
+  attackCost: 2
+  attackRange: 1
+  canJumpObstacles: 0
+  movePatterns:
+  - label: Norte 1
+    steps:
+    - x: 0
+      z: 1
+  - label: Norte 2
+    steps:
+    - x: 0
+      z: 1
+    - x: 0
+      z: 2
+  - label: Sul 1
+    steps:
+    - x: 0
+      z: -1
+  - label: Sul 2
+    steps:
+    - x: 0
+      z: -1
+    - x: 0
+      z: -2
+  - label: Leste 1
+    steps:
+    - x: 1
+      z: 0
+  - label: Leste 2
+    steps:
+    - x: 1
+      z: 0
+    - x: 2
+      z: 0
+  - label: Oeste 1
+    steps:
+    - x: -1
+      z: 0
+  - label: Oeste 2
+    steps:
+    - x: -1
+      z: 0
+    - x: -2
+      z: 0
+  - label: Nordeste 1
+    steps:
+    - x: 1
+      z: 1
+  - label: Noroeste 1
+    steps:
+    - x: -1
+      z: 1

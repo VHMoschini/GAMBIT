@@ -5,7 +5,6 @@
         "Game.Core",
         "GenericEventBus",
         "Unity.Cinemachine",
-        "Unity.Cinemachine.Editor",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],

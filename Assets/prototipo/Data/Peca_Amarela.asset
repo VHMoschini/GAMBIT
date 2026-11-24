@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91a45c8a21f350a4f95e3a068ce80f1a, type: 3}
+  m_Name: Peca_Amarela
+  m_EditorClassIdentifier: Prototipo.Core::Prototipo.Core.PieceBlueprint
+  id: yellow
+  displayName: Sentinela Amarela
+  roleSummary: "Atirador t\xE1tico (diagonais at\xE9 2 casas + recuo; ataque alcance 3)"
+  pieceColor: {r: 0.95, g: 0.8, b: 0.18, a: 1}
+  cylinderScale: {x: 0.58, y: 0.68, z: 0.58}
+  maxHP: 6
+  attack: 4
+  defense: 0
+  unlockCost: 2
+  moveCost: 2
+  attackCost: 2
+  attackRange: 3
+  canJumpObstacles: 0
+  movePatterns:
+  - label: Nordeste 1
+    steps:
+    - x: 1
+      z: 1
+  - label: Nordeste 2
+    steps:
+    - x: 1
+      z: 1
+    - x: 2
+      z: 2
+  - label: Noroeste 1
+    steps:
+    - x: -1
+      z: 1
+  - label: Noroeste 2
+    steps:
+    - x: -1
+      z: 1
+    - x: -2
+      z: 2
+  - label: Sudeste 1
+    steps:
+    - x: 1
+      z: -1
+  - label: Sudeste 2
+    steps:
+    - x: 1
+      z: -1
+    - x: 2
+      z: -2
+  - label: Sudoeste 1
+    steps:
+    - x: -1
+      z: -1
+  - label: Sudoeste 2
+    steps:
+    - x: -1
+      z: -1
+    - x: -2
+      z: -2
+  - label: Recuo 1
+    steps:
+    - x: 0
+      z: -1

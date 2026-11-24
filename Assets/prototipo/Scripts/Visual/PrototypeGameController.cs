@@ -13,6 +13,7 @@ namespace Prototipo.Visual
     public sealed class PrototypeGameController : MonoBehaviour
     {
         [SerializeField] private PrototypeConfig config;
+        [SerializeField] private PrototypeVisualTheme visualTheme;
 
         private readonly Dictionary<int, PieceView> _pieceViews = new Dictionary<int, PieceView>();
         private readonly List<BoardCoord> _cachedValidMoves = new List<BoardCoord>();
@@ -41,6 +42,11 @@ namespace Prototipo.Visual
         public void SetConfig(PrototypeConfig prototypeConfig)
         {
             config = prototypeConfig;
+        }
+
+        public void SetVisualTheme(PrototypeVisualTheme theme)
+        {
+            visualTheme = theme;
         }
 
         private void Start()
@@ -111,6 +117,7 @@ namespace Prototipo.Visual
             Engine = new MatchEngine(configData);
             SubscribeEngineEvents();
 
+            _boardView.SetTheme(visualTheme);
             _boardView.Build(Engine.Board);
 
             if (_isOnlineMatch && _steamSession != null)
@@ -164,19 +171,26 @@ namespace Prototipo.Visual
 
         private void EnsureSceneSystems()
         {
-            // Garante Directional Light se a cena nao tiver uma
-            Light existingLight = Object.FindAnyObjectByType<Light>();
-            if (existingLight == null)
+            // Iluminacao limpa de estudio (estilo Kenney Prototype) com preenchimento ambiente Trilight
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = new Color(0.62f, 0.66f, 0.74f, 1f);
+            RenderSettings.ambientEquatorColor = new Color(0.46f, 0.49f, 0.56f, 1f);
+            RenderSettings.ambientGroundColor = new Color(0.30f, 0.32f, 0.38f, 1f);
+
+            Light dirLight = Object.FindAnyObjectByType<Light>();
+            if (dirLight == null)
             {
                 GameObject lightGo = new GameObject("Directional Light");
-                Light dirLight = lightGo.AddComponent<Light>();
-                dirLight.type = LightType.Directional;
-                dirLight.intensity = 1.15f;
-                dirLight.color = new Color(1.0f, 0.98f, 0.94f);
-                lightGo.transform.rotation = Quaternion.Euler(52f, -30f, 0f);
+                dirLight = lightGo.AddComponent<Light>();
             }
 
-            // Garante Camera.main se a cena nao tiver uma
+            dirLight.type = LightType.Directional;
+            dirLight.intensity = 1.45f;
+            dirLight.color = new Color(1.00f, 0.98f, 0.95f, 1f);
+            dirLight.shadows = LightShadows.Soft;
+            dirLight.transform.rotation = Quaternion.Euler(46f, -38f, 0f);
+
+            // Garante Camera.main e fundo cinza-ardosia neutro de estudio
             _mainCamera = Camera.main;
             if (_mainCamera == null)
             {
@@ -189,6 +203,9 @@ namespace Prototipo.Visual
 
                 _mainCamera.tag = "MainCamera";
             }
+
+            _mainCamera.clearFlags = CameraClearFlags.SolidColor;
+            _mainCamera.backgroundColor = new Color(0.28f, 0.30f, 0.35f, 1f);
 
             if (_boardView == null)
             {
@@ -950,7 +967,7 @@ namespace Prototipo.Visual
 
             PieceView view = go.AddComponent<PieceView>();
             bool hideClosedIdentity = _isOnlineMatch && _steamSession != null && piece.Owner != _steamSession.LocalTeam;
-            view.Initialize(piece, _boardView.GetTileTopPosition(piece.Position), hideClosedIdentity);
+            view.Initialize(piece, _boardView.GetTileTopPosition(piece.Position), hideClosedIdentity, visualTheme);
             _pieceViews[piece.Id] = view;
         }
 

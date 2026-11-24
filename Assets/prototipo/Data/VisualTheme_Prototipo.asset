@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f5293e779016a54fbf6d4eb31841632, type: 3}
+  m_Name: VisualTheme_Prototipo
+  m_EditorClassIdentifier: Prototipo.Visual::Prototipo.Visual.PrototypeVisualTheme
+  baseLitMaterial: {fileID: 2100000, guid: d534a37968ea30d4d85cae22d3904760, type: 2}
+  normalTileTexture: {fileID: 2800000, guid: 08462b032aa626e4fb5eeb9a4b1a4a80, type: 3}
+  normalTileDarkTexture: {fileID: 0}
+  normalTileTiling: {x: 1, y: 1}
+  spawnTileTexture: {fileID: 2800000, guid: 08462b032aa626e4fb5eeb9a4b1a4a80, type: 3}
+  spawnP2TileTexture: {fileID: 0}
+  spawnTileTiling: {x: 1, y: 1}
+  blockedTileTexture: {fileID: 2800000, guid: 044e9929f680075438b1cc390c049d4e, type: 3}
+  blockedTileTiling: {x: 1, y: 1}
+  showArenaUnderBase: 1
+  arenaBaseTexture: {fileID: 2800000, guid: 044e9929f680075438b1cc390c049d4e, type: 3}
+  arenaBaseTiling: {x: 8, y: 8}
+  arenaBaseTint: {r: 0.42, g: 0.46, b: 0.54, a: 1}
+  pieceBodyTexture: {fileID: 2800000, guid: de9385323e8c2704e8bc6a1a7c5d1641, type: 3}
+  pieceBodyTiling: {x: 2, y: 1}
+  capsuleShellTexture: {fileID: 2800000, guid: d433b7b67345828428b8c31ad9429b41, type: 3}
+  capsuleShellTiling: {x: 2, y: 1}
+  tileSmoothness: 0.25
+  pieceSmoothness: 0.42

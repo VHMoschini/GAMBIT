@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50f79c303137e8c47a91e79bfc131dea, type: 3}
   m_Name: Config_Prototipo
   m_EditorClassIdentifier: Prototipo.Core::Prototipo.Core.PrototypeConfig
-  boardWidth: 7
-  boardHeight: 7
+  boardWidth: 10
+  boardHeight: 10
   capsulesPerPlayer: 4
   actionPointsPerTurn: 6
   pieceBlueprints:

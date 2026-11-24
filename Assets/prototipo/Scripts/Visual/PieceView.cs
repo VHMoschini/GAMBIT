@@ -37,7 +37,10 @@ namespace Prototipo.Visual
 
         private readonly List<RendererEntry> _visualRenderers = new List<RendererEntry>();
 
-        private Material _sharedMaterial;
+        private PrototypeVisualTheme _theme;
+        private Material _solidAccentMaterial;
+        private Material _bodyMaterial;
+        private Material _capsuleMaterial;
         private MaterialPropertyBlock _propertyBlock;
 
         private GameObject _capsuleRoot;
@@ -62,16 +65,12 @@ namespace Prototipo.Visual
 
         private void Awake()
         {
-            EnsureMaterial();
+            EnsureMaterials();
         }
 
         private void OnDestroy()
         {
-            if (_sharedMaterial != null)
-            {
-                Destroy(_sharedMaterial);
-                _sharedMaterial = null;
-            }
+            DestroyMaterials();
         }
 
         private void Update()
@@ -109,9 +108,19 @@ namespace Prototipo.Visual
         /// <summary>
         /// Inicializa a peca visual a partir de uma PieceInstance logica.
         /// </summary>
-        public void Initialize(PieceInstance piece, Vector3 worldPos, bool hideClosedIdentity = false)
+        public void Initialize(
+            PieceInstance piece,
+            Vector3 worldPos,
+            bool hideClosedIdentity = false,
+            PrototypeVisualTheme theme = null)
         {
-            EnsureMaterial();
+            if (_theme != theme)
+            {
+                _theme = theme;
+                DestroyMaterials();
+            }
+
+            EnsureMaterials();
 
             PieceId = piece.Id;
             Owner = piece.Owner;
@@ -295,7 +304,8 @@ namespace Prototipo.Visual
                 new Vector3(Mathf.Max(0.96f, cylScale.x + 0.28f), 0.018f, Mathf.Max(0.96f, cylScale.z + 0.28f)),
                 SelectionGoldColor,
                 SelectionGoldColor,
-                false);
+                false,
+                _solidAccentMaterial);
             _selectionRing.SetActive(false);
 
             // 1. Forma de Capsula Fechada
@@ -304,7 +314,7 @@ namespace Prototipo.Visual
 
             Color mutedCapsuleColor = _hideClosedIdentity
                 ? HiddenCapsuleColor
-                : Color.Lerp(pieceColor, new Color(0.22f, 0.22f, 0.26f), 0.45f);
+                : Color.Lerp(pieceColor, new Color(0.22f, 0.22f, 0.26f), 0.38f);
             CreatePart(
                 "CapsuleShell",
                 PrimitiveType.Sphere,
@@ -313,7 +323,8 @@ namespace Prototipo.Visual
                 new Vector3(0.58f, 0.58f, 0.58f),
                 mutedCapsuleColor,
                 ExhaustedBodyColor,
-                true);
+                true,
+                _capsuleMaterial);
 
             CreatePart(
                 "CapsuleBand",
@@ -323,7 +334,8 @@ namespace Prototipo.Visual
                 new Vector3(0.61f, 0.05f, 0.61f),
                 Color.white,
                 ExhaustedDetailColor,
-                true);
+                true,
+                _solidAccentMaterial);
 
             CreatePart(
                 "CapsuleTeamRing",
@@ -333,7 +345,8 @@ namespace Prototipo.Visual
                 new Vector3(0.78f, 0.03f, 0.78f),
                 teamColor,
                 exhaustedRing,
-                true);
+                true,
+                _solidAccentMaterial);
 
             // 2. Forma Desbloqueada (Cilindro + Anel do Time + Visor Frontal)
             _unlockedRoot = new GameObject("UnlockedForm");
@@ -348,7 +361,8 @@ namespace Prototipo.Visual
                 cylScale,
                 pieceColor,
                 ExhaustedBodyColor,
-                true);
+                true,
+                _bodyMaterial);
 
             float ringDiameter = Mathf.Max(0.82f, Mathf.Max(cylScale.x, cylScale.z) + 0.16f);
             CreatePart(
@@ -359,7 +373,8 @@ namespace Prototipo.Visual
                 new Vector3(ringDiameter, 0.035f, ringDiameter),
                 teamColor,
                 exhaustedRing,
-                true);
+                true,
+                _solidAccentMaterial);
 
             CreatePart(
                 "FrontVisor",
@@ -369,7 +384,8 @@ namespace Prototipo.Visual
                 new Vector3(cylScale.x * 0.58f, 0.12f, 0.22f),
                 VisorColor,
                 ExhaustedDetailColor,
-                true);
+                true,
+                _solidAccentMaterial);
 
             // 3. Label flutuante 3D (TextMeshPro)
             GameObject labelGo = new GameObject("FloatingLabel");
@@ -393,7 +409,8 @@ namespace Prototipo.Visual
             Vector3 localScale,
             Color color,
             Color exhaustedColor,
-            bool registerForFlash)
+            bool registerForFlash,
+            Material material)
         {
             GameObject go = GameObject.CreatePrimitive(primitive);
             go.name = partName;
@@ -411,7 +428,12 @@ namespace Prototipo.Visual
             Renderer rend = go.GetComponent<Renderer>();
             if (rend != null)
             {
-                rend.sharedMaterial = _sharedMaterial;
+                Material chosen = material != null ? material : _solidAccentMaterial;
+                if (chosen != null)
+                {
+                    rend.sharedMaterial = chosen;
+                }
+
                 ApplyColor(rend, color);
 
                 if (registerForFlash)
@@ -637,21 +659,44 @@ namespace Prototipo.Visual
             rend.SetPropertyBlock(_propertyBlock);
         }
 
-        private void EnsureMaterial()
+        private void EnsureMaterials()
         {
             if (_propertyBlock == null)
             {
                 _propertyBlock = new MaterialPropertyBlock();
             }
 
-            if (_sharedMaterial != null)
+            if (_solidAccentMaterial != null)
             {
                 return;
             }
 
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            _sharedMaterial = new Material(shader);
-            _sharedMaterial.name = "Piece_URPLit";
+            Material preferredBase = _theme != null ? _theme.BaseLitMaterial : null;
+            float? pieceSmooth = _theme != null ? (float?)_theme.PieceSmoothness : null;
+
+            _solidAccentMaterial = PrototypeMaterialFactory.CreateLitMaterial("PieceAccent_URPLit", preferredBase);
+            _bodyMaterial = PrototypeMaterialFactory.CreateTexturedMaterial(
+                "PieceBody_Kenney",
+                PrototypeMaterialFactory.ResPieceBody,
+                _theme != null ? _theme.PieceBodyTexture : null,
+                _theme != null ? _theme.PieceBodyTiling : new Vector2(2f, 1f),
+                pieceSmooth,
+                preferredBase);
+
+            _capsuleMaterial = PrototypeMaterialFactory.CreateTexturedMaterial(
+                "CapsuleShell_Kenney",
+                PrototypeMaterialFactory.ResCapsuleShell,
+                _theme != null ? _theme.CapsuleShellTexture : null,
+                _theme != null ? _theme.CapsuleShellTiling : new Vector2(2f, 1f),
+                pieceSmooth,
+                preferredBase);
+        }
+
+        private void DestroyMaterials()
+        {
+            if (_solidAccentMaterial != null) { Destroy(_solidAccentMaterial); _solidAccentMaterial = null; }
+            if (_bodyMaterial != null) { Destroy(_bodyMaterial); _bodyMaterial = null; }
+            if (_capsuleMaterial != null) { Destroy(_capsuleMaterial); _capsuleMaterial = null; }
         }
     }
 }

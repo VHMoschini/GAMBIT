@@ -24,6 +24,17 @@ namespace Prototipo.Editor
         private const string BlueAssetPath = "Assets/prototipo/Data/Peca_Azul.asset";
         private const string YellowAssetPath = "Assets/prototipo/Data/Peca_Amarela.asset";
         private const string ConfigAssetPath = "Assets/prototipo/Data/Config_Prototipo.asset";
+        private const string VisualThemeAssetPath = "Assets/prototipo/Data/VisualTheme_Prototipo.asset";
+
+        private const string LitMaterialPath = "Assets/prototipo/Resources/PrototipoLit.mat";
+        private const string KenneyNormalLightPath = "Assets/Textures/Prototype/Light/texture_08.png";
+        private const string KenneyNormalDarkPath = "Assets/Textures/Prototype/Dark/texture_01.png";
+        private const string KenneySpawnP1Path = "Assets/Textures/Prototype/Purple/texture_05.png";
+        private const string KenneySpawnP2Path = "Assets/Textures/Prototype/Orange/texture_05.png";
+        private const string KenneyBlockedTilePath = "Assets/Textures/Prototype/Dark/texture_13.png";
+        private const string KenneyArenaBasePath = "Assets/Textures/Prototype/Dark/texture_04.png";
+        private const string KenneyPieceBodyPath = "Assets/Textures/Prototype/Light/texture_02.png";
+        private const string KenneyCapsuleShellPath = "Assets/Textures/Prototype/Light/texture_02.png";
 
         [MenuItem("GAMBIT/Prototipo/Criar e Abrir Cena do Prototipo", priority = 10)]
         public static void CreateAndOpenPrototypeScene()
@@ -41,9 +52,12 @@ namespace Prototipo.Editor
 
             List<PieceBlueprint> blueprints = new List<PieceBlueprint> { red, blue, yellow };
             PrototypeConfig config = CreateOrUpdateConfig(ConfigAssetPath, blueprints);
+            PrototypeVisualTheme visualTheme = CreateOrUpdateVisualTheme(VisualThemeAssetPath);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            config = AssetDatabase.LoadAssetAtPath<PrototypeConfig>(ConfigAssetPath);
+            visualTheme = AssetDatabase.LoadAssetAtPath<PrototypeVisualTheme>(VisualThemeAssetPath);
 
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             ConfigureSceneLightingAndCamera();
@@ -51,14 +65,22 @@ namespace Prototipo.Editor
             GameObject controllerGo = new GameObject("PrototipoController");
             PrototypeGameController controller = controllerGo.AddComponent<PrototypeGameController>();
             controller.SetConfig(config);
+            controller.SetVisualTheme(visualTheme);
 
             SerializedObject serializedController = new SerializedObject(controller);
             SerializedProperty configProp = serializedController.FindProperty("config");
             if (configProp != null)
             {
                 configProp.objectReferenceValue = config;
-                serializedController.ApplyModifiedPropertiesWithoutUndo();
             }
+
+            SerializedProperty themeProp = serializedController.FindProperty("visualTheme");
+            if (themeProp != null)
+            {
+                themeProp.objectReferenceValue = visualTheme;
+            }
+
+            serializedController.ApplyModifiedPropertiesWithoutUndo();
 
             EditorUtility.SetDirty(controller);
             EditorSceneManager.MarkSceneDirty(scene);
@@ -169,6 +191,34 @@ namespace Prototipo.Editor
             return config;
         }
 
+        private static PrototypeVisualTheme CreateOrUpdateVisualTheme(string assetPath)
+        {
+            Material baseLit = AssetDatabase.LoadAssetAtPath<Material>(LitMaterialPath);
+            Texture2D normalLightTex = AssetDatabase.LoadAssetAtPath<Texture2D>(KenneyNormalLightPath);
+            Texture2D normalDarkTex = AssetDatabase.LoadAssetAtPath<Texture2D>(KenneyNormalDarkPath);
+            Texture2D spawnP1Tex = AssetDatabase.LoadAssetAtPath<Texture2D>(KenneySpawnP1Path);
+            Texture2D spawnP2Tex = AssetDatabase.LoadAssetAtPath<Texture2D>(KenneySpawnP2Path);
+            Texture2D blockedTex = AssetDatabase.LoadAssetAtPath<Texture2D>(KenneyBlockedTilePath);
+            Texture2D arenaTex = AssetDatabase.LoadAssetAtPath<Texture2D>(KenneyArenaBasePath);
+            Texture2D pieceTex = AssetDatabase.LoadAssetAtPath<Texture2D>(KenneyPieceBodyPath);
+            Texture2D capsuleTex = AssetDatabase.LoadAssetAtPath<Texture2D>(KenneyCapsuleShellPath);
+
+            PrototypeVisualTheme theme = AssetDatabase.LoadAssetAtPath<PrototypeVisualTheme>(assetPath);
+            if (theme == null)
+            {
+                theme = ScriptableObject.CreateInstance<PrototypeVisualTheme>();
+                theme.ConfigureDefaults(baseLit, normalLightTex, normalDarkTex, spawnP1Tex, spawnP2Tex, blockedTex, arenaTex, pieceTex, capsuleTex);
+                AssetDatabase.CreateAsset(theme, assetPath);
+            }
+            else
+            {
+                theme.ConfigureDefaults(baseLit, normalLightTex, normalDarkTex, spawnP1Tex, spawnP2Tex, blockedTex, arenaTex, pieceTex, capsuleTex);
+                EditorUtility.SetDirty(theme);
+            }
+
+            return theme;
+        }
+
         private static void ConfigureSceneLightingAndCamera()
         {
             Camera mainCamera = Camera.main;
@@ -182,16 +232,16 @@ namespace Prototipo.Editor
                 mainCamera.transform.position = new Vector3(3.45f, 9.20f, -3.10f);
                 mainCamera.transform.rotation = Quaternion.Euler(52f, 0f, 0f);
                 mainCamera.clearFlags = CameraClearFlags.SolidColor;
-                mainCamera.backgroundColor = new Color(0.08f, 0.10f, 0.14f, 1f);
+                mainCamera.backgroundColor = new Color(0.28f, 0.30f, 0.35f, 1f);
             }
 
             Light directionalLight = Object.FindAnyObjectByType<Light>();
             if (directionalLight != null)
             {
                 directionalLight.type = LightType.Directional;
-                directionalLight.transform.rotation = Quaternion.Euler(52f, -32f, 0f);
-                directionalLight.intensity = 1.25f;
-                directionalLight.color = new Color(1.00f, 0.97f, 0.92f, 1f);
+                directionalLight.transform.rotation = Quaternion.Euler(46f, -38f, 0f);
+                directionalLight.intensity = 1.45f;
+                directionalLight.color = new Color(1.00f, 0.98f, 0.95f, 1f);
                 directionalLight.shadows = LightShadows.Soft;
             }
         }

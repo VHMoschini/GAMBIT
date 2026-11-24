@@ -73,5 +73,8 @@ O projeto já vem configurado com **Steamworks.NET** (`com.rlabrecque.steamworks
   3. Adicione o novo asset à lista `Piece Blueprints` de `Assets/prototipo/Data/Config_Prototipo.asset` — tanto o motor quanto os botões do painel de Setup se adaptam automaticamente!
 - **Ajustar arena e economia de AP:**
   - Edite `Board Width`, `Board Height`, `Capsules Per Player` e `Action Points Per Turn` diretamente no asset `Config_Prototipo.asset`.
+- **Personalizar texturas (Kenney Prototype Textures):**
+  - Os materiais URP padrão em `Assets/prototipo/Resources/` já usam as texturas Kenney de `Assets/Textures/Prototype/` (`Light/texture_08` e `Dark/texture_01` no grid xadrez, `Purple/texture_05` e `Orange/texture_05` nos spawns P1/P2, `Dark/texture_13` nos blocos de obstáculo, `Dark/texture_04` na base da arena e `Light/texture_02` nos cilindros e cápsulas).
+  - Você também pode trocar qualquer textura, tiling ou acabamento (smoothness) pelo ScriptableObject `VisualTheme_Prototipo.asset` em `Assets/prototipo/Data/` (ou criar novos via `Create > GAMBIT > Prototipo > Visual Theme`) e arrastá-lo para o campo `Visual Theme` do `PrototipoController`.
 - **Reagir a novos eventos (áudio, VFX, IA):**
   - Inscreva novos listeners diretamente nos eventos públicos de `MatchEngine` (`OnCapsuleUnlocked`, `OnPieceMoved`, `OnPieceAttacked`, `OnTurnChanged`, `OnPhaseChanged`, `OnGameOver`, `OnLogMessage`).
